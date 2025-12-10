@@ -17,10 +17,17 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
+# ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "main.h"
 #include "cmsis_os.h"
 #include "lwip.h"
 
+#ifdef __cplusplus
+} // extern "C"
+#endif  
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -28,7 +35,15 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
+class auxiliary{
+public:
+    auxiliary() {
+      HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_3);
+    }
+    ~auxiliary() {
+      HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_3);
+    }    
+};
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -102,7 +117,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+  auxiliary ax;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
