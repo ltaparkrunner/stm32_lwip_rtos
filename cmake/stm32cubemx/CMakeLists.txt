@@ -39,6 +39,7 @@ set(MX_Application_Src
     ${CMAKE_CURRENT_SOURCE_DIR}/../../LWIP/Target/ethernetif.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../LWIP/App/lwip.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/main.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/httpserver-netconn.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/freertos.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/stm32f2xx_it.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/stm32f2xx_hal_msp.c

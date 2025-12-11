@@ -24,6 +24,7 @@ extern "C" {
 #include "main.h"
 #include "cmsis_os.h"
 #include "lwip.h"
+#include "httpserver-netconn.h"
 
 #ifdef __cplusplus
 } // extern "C"
@@ -177,7 +178,7 @@ int main(void)
   auxTaskHandle = osThreadNew(StartAuxTask, NULL, &auxTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
-  /* add threads, ... */
+  http_server_netconn_init();
   /* USER CODE END RTOS_THREADS */
 
   /* creation of auxEvent */
