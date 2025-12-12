@@ -2,7 +2,8 @@
 
 led::led(color_t c) :
     clr(c)
-,   st(disabled)
+    ,st(disabled)
+    ,timers(1)
 {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
     switch(clr){
@@ -10,8 +11,6 @@ led::led(color_t c) :
             pin = LD1_Pin;
             port = GPIOB;
         break;
-
-
         case blue:
             pin = LD2_Pin;
             port = GPIOB;            
@@ -26,21 +25,58 @@ led::led(color_t c) :
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(port, &GPIO_InitStruct);
-    st = off;
+    st = off_s;
 }
 
 led::~led() {
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
-    GPIO_InitStruct.Pin = pin;
-    HAL_GPIO_deInit(port, &GPIO_InitStruct);
+    HAL_GPIO_DeInit(port, pin);
     st = disabled;
+    for(auto t : timers){
+        osTimerDelete(t);
+    }       
 }
+int led::on() {
+    if(st == blink_s){
+        for(auto t : timers)
+            osTimerDelete(t);
+        timers.clear();     
+    }
+    HAL_GPIO_WritePin(port, pin, GPIO_PIN_SET);
+    st = on_s;
+    return 0;
+}       
+int led::off(){
+    if(st == blink_s){
+        for(auto t : timers)
+            osTimerDelete(t);
+        timers.clear();     
+    }
+    HAL_GPIO_WritePin(port, pin, GPIO_PIN_RESET);
+    st = off_s;
+    return 0;   
+}
+int led::blink(uint32_t period_ms) {
+    if(st == blink_s){
+        for(auto t : timers)
+            osTimerDelete(t);
+        timers.clear();     
+    }   
+    // Create timer
+    osTimerId_t t = osTimerNew(
+        [](void *argument){
+            led * l = static_cast<led*>(argument);
+            HAL_GPIO_TogglePin(l->port, l->pin);
+        },
+        osTimerPeriodic,
+        this,
+        nullptr
+    );
+    if(t == nullptr){
+        return -1; // Error creating timer
+    }
+    timers.push_back(t);
+    osTimerStart(t, period_ms);
+    st = blink_s;
+    return 0;
+}   
 
-/*
-  Configure GPIO pins : LD1_Pin LD3_Pin LD2_Pin 
-  GPIO_InitStruct.Pin = LD1_Pin|LD3_Pin|LD2_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-*/
