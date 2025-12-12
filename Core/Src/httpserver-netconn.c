@@ -275,10 +275,49 @@ void http_server_netconn_init()
   httpTaskHandle = osThreadNew(http_server_netconn_thread, NULL, &httpTask_attributes);
 }
 
-int addThreadInfo(char *buf)
-{
-    return 0;
+
+#define MAX_THRDS 10
+
+int32_t threadsInfo(char* s){
+  osThreadId_t thrIds[MAX_THRDS];
+  int32_t cnt;
+  int32_t len = 0;
+  int32_t wlen = 0;
+  cnt = osThreadEnumerate(thrIds, MAX_THRDS);
+
+  if(cnt>0){
+    len = sprintf(s, " Thread  |  Thread  |  Thread  |  Stack \n");
+    s += len;
+    wlen += len;
+    len = sprintf(s, "  name   |   state  | priority | av size \n");
+    s += len;
+    wlen += len;
+    const int slen = 9;
+    char state[slen];
+    for(int32_t i=0; i<cnt; i++){
+      switch(osThreadGetState(thrIds[i])){
+        case osThreadInactive: strncpy(state, "Inactive", slen); break;
+        case osThreadReady: strncpy(state, " Ready  ", slen); break;
+        case osThreadRunning: strncpy(state, " Running  ", slen); break;
+        case osThreadBlocked: strncpy(state, " Blocked  ", slen); break;
+        case osThreadTerminated: strncpy(state, "Terminated", slen); break;
+        case osThreadError: strncpy(state, "  Error  ", slen);
+        default: strncpy(state, "ParseErr", slen);
+      }
+      len = sprintf((char*)s, " %s | 0x%8s | 0x%8lx | 0x%8lx \n", 
+        osThreadGetName(thrIds[i]),
+        state,
+        (uint32_t)osThreadGetPriority(thrIds[i]),
+        osThreadGetStackSpace(thrIds[i])
+      );
+      s += len;
+      wlen += len;
+    }
+  }
+  else sprintf((char*)s, " No active threads found (besides potentially the current one).\n");
+  return wlen;
 }
+
 /**
   * @brief  Create and send a dynamic Web Page. This page contains the list of 
   *         running tasks and the number of page hits. 
@@ -301,8 +340,9 @@ void DynWebPage(struct netconn *conn)
     
   /* The list of tasks and their status */
 //  osThreadList((unsigned char *)(PAGE_BODY + strlen(PAGE_BODY)));
+  int len = threadsInfo((char*)(PAGE_BODY + strlen(PAGE_BODY)));
+  if(len==0) strcat((char *)PAGE_BODY , "Something wrong\n");
 
-  addThreadInfo((char*)(PAGE_BODY + strlen(PAGE_BODY)));
   strcat((char *)PAGE_BODY, "<br><br>---------------------------------------------");
   strcat((char *)PAGE_BODY, "<br>B : Blocked, R : Ready, D : Deleted, S : Suspended<br>");
 
